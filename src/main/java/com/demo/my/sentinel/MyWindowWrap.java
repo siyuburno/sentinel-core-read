@@ -1,12 +1,12 @@
-package com.demo.sentinel.mysentinel;
+package com.demo.my.sentinel;
 
-public class WindowWrap<D> {
+public class MyWindowWrap<D> {
     private long timestamp;
     private long windowStart;
     private long intervalInMs;
     private D data;
 
-    public WindowWrap(long timestamp, long intervalInMs, D data) {
+    public MyWindowWrap(long timestamp, long intervalInMs, D data) {
         this.timestamp = timestamp;
         this.intervalInMs = intervalInMs;
         this.data = data;

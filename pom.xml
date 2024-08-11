@@ -19,6 +19,12 @@
       <artifactId>sentinel-core</artifactId>
       <version>1.8.6</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>29.0-jre</version>
+    </dependency>
+
   </dependencies>
   <build>
     <finalName>sentinel-core-read</finalName>

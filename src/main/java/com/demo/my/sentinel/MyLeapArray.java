@@ -1,4 +1,4 @@
-package com.demo.sentinel.mysentinel;
+package com.demo.my.sentinel;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
@@ -14,7 +14,7 @@ public class MyLeapArray {
     /**
      * 数据数组
      */
-    private AtomicReferenceArray<WindowWrap<MyMetricBucket>> array;
+    private AtomicReferenceArray<MyWindowWrap<MyMetricBucket>> array;
 
     public MyLeapArray(long intervalInMs, int windowNum) {
         this.intervalInMs = intervalInMs;
@@ -30,14 +30,14 @@ public class MyLeapArray {
         long currentTimeMillis = System.currentTimeMillis();
         int index = (int) ((currentTimeMillis / intervalInMs) % sampleCount);
         long windowStart = currentTimeMillis - (currentTimeMillis % intervalInMs);
-        WindowWrap<MyMetricBucket> windowWrap = array.get(index);
-        if (windowWrap != null && windowWrap.getWindowStart() == windowStart) {
-            return windowWrap.getData();
+        MyWindowWrap<MyMetricBucket> myWindowWrap = array.get(index);
+        if (myWindowWrap != null && myWindowWrap.getWindowStart() == windowStart) {
+            return myWindowWrap.getData();
         }
 
         MyMetricBucket newMetricBucket = new MyMetricBucket();
-        WindowWrap<MyMetricBucket> newWindowWrap = new WindowWrap<>(currentTimeMillis, intervalInMs, newMetricBucket);
-        array.set(index, newWindowWrap);
+        MyWindowWrap<MyMetricBucket> newMyWindowWrap = new MyWindowWrap<>(currentTimeMillis, intervalInMs, newMetricBucket);
+        array.set(index, newMyWindowWrap);
         return newMetricBucket;
     }
 
@@ -48,12 +48,12 @@ public class MyLeapArray {
     public MyMetricBucket sumAll() {
         MyMetricBucket sumAll = new MyMetricBucket();
         for (int i = 0; i < sampleCount; i++) {
-            WindowWrap<MyMetricBucket> windowWrap = array.get(i);
-            if (isAvailable(windowWrap) && windowWrap.getData() != null) {
-                sumAll.addTotal(windowWrap.getData().getTotal());
-                sumAll.addSuccess(windowWrap.getData().getSuccess());
-                sumAll.addBlock(windowWrap.getData().getBlock());
-                sumAll.addException(windowWrap.getData().getException());
+            MyWindowWrap<MyMetricBucket> myWindowWrap = array.get(i);
+            if (isAvailable(myWindowWrap) && myWindowWrap.getData() != null) {
+                sumAll.addTotal(myWindowWrap.getData().getTotal());
+                sumAll.addSuccess(myWindowWrap.getData().getSuccess());
+                sumAll.addBlock(myWindowWrap.getData().getBlock());
+                sumAll.addException(myWindowWrap.getData().getException());
             }
         }
         return sumAll;
@@ -61,10 +61,10 @@ public class MyLeapArray {
 
     /**
      * 判断传入的窗口是否可用（未过期）
-     * @param windowWrap
+     * @param myWindowWrap
      * @return
      */
-    private boolean isAvailable(WindowWrap<MyMetricBucket> windowWrap) {
-        return windowWrap != null && windowWrap.getWindowStart() >= ( System.currentTimeMillis() - (sampleCount * intervalInMs));
+    private boolean isAvailable(MyWindowWrap<MyMetricBucket> myWindowWrap) {
+        return myWindowWrap != null && myWindowWrap.getWindowStart() >= ( System.currentTimeMillis() - (sampleCount * intervalInMs));
     }
 }

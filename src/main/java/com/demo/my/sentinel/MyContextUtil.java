@@ -1,11 +1,11 @@
-package com.demo.sentinel.mysentinel;
+package com.demo.my.sentinel;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class ContextUtil {
+public class MyContextUtil {
     private static ThreadLocal<MyContext> myContextHolder = new ThreadLocal<>();
     private static Map<String, MyLeapArray> statisticMap = new HashMap<>();
     private static Lock lock = new ReentrantLock();

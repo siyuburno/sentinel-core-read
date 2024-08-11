@@ -1,4 +1,4 @@
-package com.demo.sentinel.mysentinel;
+package com.demo.my.sentinel;
 
 public class MyContext {
     private String contextName;
