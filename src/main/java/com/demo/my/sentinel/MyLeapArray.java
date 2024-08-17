@@ -1,6 +1,7 @@
 package com.demo.my.sentinel;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class MyLeapArray {
     /**
@@ -16,6 +17,8 @@ public class MyLeapArray {
      */
     private AtomicReferenceArray<MyWindowWrap<MyMetricBucket>> array;
 
+    private ReentrantLock updateLock = new ReentrantLock();
+
     public MyLeapArray(long intervalInMs, int windowNum) {
         this.intervalInMs = intervalInMs;
         this.sampleCount = windowNum;
@@ -23,10 +26,41 @@ public class MyLeapArray {
     }
 
     /**
-     * 获取当前滑动窗口
-     * @return
+     * 获取当前时间的滑动窗口（性能优化版本）
+     * @return 当前时间的指标桶
      */
-    public synchronized MyMetricBucket getCurrent() {
+    public MyMetricBucket getCurrentV2() {
+        long currentTimeMills = System.currentTimeMillis();
+        long currentWindowStart = currentTimeMills - (currentTimeMills % intervalInMs);
+        int idx = (int) ((currentTimeMills / intervalInMs) % sampleCount);
+        while (true) {
+            MyWindowWrap<MyMetricBucket> old = array.get(idx);
+            if (old == null) {
+                MyWindowWrap<MyMetricBucket> newMyWindowWrap = new MyWindowWrap<>(currentTimeMills, intervalInMs, new MyMetricBucket());
+                if (array.compareAndSet(idx, null, newMyWindowWrap)) {
+                    return newMyWindowWrap.getData();
+                } else {
+                    Thread.yield();
+                }
+            } else if (currentWindowStart == old.getWindowStart()) {
+                return old.getData();
+            } else if (currentWindowStart > old.getWindowStart()) {
+                if (updateLock.tryLock()) {
+
+                }else {
+                    Thread.yield();
+                }
+            } else {
+                throw new RuntimeException("获取当前时间的滑动窗口数据异常，currentWindowStart < old.getWindowStart()");
+            }
+        }
+    }
+
+    /**
+     * 获取当前滑动窗口（synchronized版本）
+     * @return  当前时间的指标桶
+     */
+    public synchronized MyMetricBucket getCurrentV1() {
         long currentTimeMillis = System.currentTimeMillis();
         int index = (int) ((currentTimeMillis / intervalInMs) % sampleCount);
         long windowStart = currentTimeMillis - (currentTimeMillis % intervalInMs);
