@@ -10,7 +10,7 @@ public class MyContextUtil {
     private static Map<String, MyLeapArray> statisticMap = new HashMap<>();
     private static Lock lock = new ReentrantLock();
 
-    public static void entry(String contextName, String resourceName) throws Exception {
+    public static void entry(String contextName, String resourceName, long qps) throws Exception {
         MyContext myContext = myContextHolder.get();
         if (myContext == null) {
             myContext = new MyContext(contextName, resourceName);
@@ -22,7 +22,7 @@ public class MyContextUtil {
         if (myLeapArray == null) {
             lock.lock();
             try {
-                myLeapArray= statisticMap.get(key);
+                myLeapArray = statisticMap.get(key);
                 if (myLeapArray == null) {
                     myLeapArray = new MyLeapArray(500, 2);
                     statisticMap.put(key, myLeapArray);
@@ -36,14 +36,20 @@ public class MyContextUtil {
             }
         }
 
+        // 获取当前时间窗口
+        MyMetricBucket currentMB = myLeapArray.getCurrentV2();
+        // 总请求数+1
+        currentMB.addTotal(1);
+        // 计算整个滑动时间窗口的总数据
         MyMetricBucket summedAll = myLeapArray.sumAll();
-        if (summedAll.getTotal() > 10) {
-            myLeapArray.getCurrent().addTotal(1);
-            myLeapArray.getCurrent().addBlock(1);
-            throw new Exception("QPS > 10");
+        // 当前的qps > 我们设置的阈值
+        if (summedAll.getTotal() > qps) {
+            // block数+1，并抛出异常
+            currentMB.addBlock(1);
+            throw new Exception("QPS >" + qps);
         }
-        myLeapArray.getCurrent().addTotal(1);
-        myLeapArray.getCurrent().addSuccess(1);
+        // 请求pass数+1
+        currentMB.addSuccess(1);
     }
 
     public static void exit() {
