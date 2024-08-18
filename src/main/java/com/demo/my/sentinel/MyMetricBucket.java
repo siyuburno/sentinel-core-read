@@ -41,6 +41,17 @@ public class MyMetricBucket {
         this.exception += count;
     }
 
+    public synchronized void syncReset() {
+        reset();
+    }
+
+    public synchronized void reset() {
+        this.total = 0;
+        this.success = 0;
+        this.block = 0;
+        this.exception = 0;
+    }
+
     public long getTotal() {
         return total;
     }

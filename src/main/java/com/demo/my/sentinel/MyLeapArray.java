@@ -1,5 +1,6 @@
 package com.demo.my.sentinel;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -46,7 +47,9 @@ public class MyLeapArray {
                 return old.getData();
             } else if (currentWindowStart > old.getWindowStart()) {
                 if (updateLock.tryLock()) {
-
+                    old.setWindowStart(currentWindowStart);
+                    old.getData().reset();
+                    return old.getData();
                 }else {
                     Thread.yield();
                 }
@@ -91,6 +94,18 @@ public class MyLeapArray {
             }
         }
         return sumAll;
+    }
+
+    /**
+     * 重置数据
+     */
+    public void reset() {
+        for (int i = 0; i < array.length(); i++) {
+            MyWindowWrap<MyMetricBucket> item = array.get(i);
+            if (Objects.nonNull(item) && Objects.nonNull(item.getData())) {
+                item.getData().reset();
+            }
+        }
     }
 
     /**

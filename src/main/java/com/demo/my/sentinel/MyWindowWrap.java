@@ -17,6 +17,10 @@ public class MyWindowWrap<D> {
         return windowStart;
     }
 
+    public void setWindowStart(long windowStart) {
+        this.windowStart = windowStart;
+    }
+
     public long getTimestamp() {
         return timestamp;
     }
